@@ -6,31 +6,33 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <cstring>
+#include "../include/myHttpLog.h"
 
 typedef unsigned char   	WORD;
 typedef unsigned short  	WORD16;
 typedef unsigned int    	WORD32;
-typedef long unsigned int	WORD64;
+typedef unsigned long long	WORD64;
 
-void errorInfo(const char* errorCauseString);
 int initMyHttpSocket(WORD16* port);
+void errorInfo(const char* errorCauseString);
 
 int main()	
 {
 	using namespace std;
-	cout << "Running my Http server!" << endl;
+	HTTP_LOG_INFO("Running my Http server!");
 
 	WORD16 port = 80;
 	int myHttpServerSocket = -1;
 	int myHttpClientSocket = -1;
 	struct sockaddr_in clientAddr;
 	WORD32 clientAddrLength = sizeof(clientAddr);
-	const int MAXBUFNUM = 4096;
-	char buff[MAXBUFNUM];
+
+	const int maxBufNum = 4096;
+	char buff[maxBufNum];
 	//pthread_t newthread;
 
 	myHttpServerSocket = initMyHttpSocket(&port);
-	cout << "http running on port :" << port << endl;
+	HTTP_LOG_INFO("http running on port : %d", port);
 
 	while(1)
 	{
@@ -39,9 +41,9 @@ int main()
 		if(-1 == myHttpClientSocket)
 			errorInfo("accept socket error!");
 
-		int byteNums = read(myHttpClientSocket, buff, MAXBUFNUM);
+		int byteNums = read(myHttpClientSocket, buff, maxBufNum);
 		if(byteNums != 0)
-			std::cout<<"get information:"<<buff<<std::endl;
+			HTTP_LOG_INFO("get information: %s", buff);
 
 		close(myHttpClientSocket);
 		//if(pthread_create(&newthread, NULL, acceptRequest,myHttpClientSocket) != 0)
@@ -64,13 +66,14 @@ void acceptRequest(int client)
 
 	//struct stat st;
 
-	std::cout << "Excute accept request!" << std::endl;
+	HTTP_LOG_INFO("Excute accept request!");
 
 }
 
 int initMyHttpSocket(WORD16* port)
 {
-	std::cout << "Start init my http socket server!" << std::endl;
+	HTTP_LOG_INFO("Start init my http socket server!");
+
 	struct sockaddr_in serverAddr;
 	int http = socket(AF_INET, SOCK_STREAM, 0);	//AF_INET:网络连接，ipv4    //SOCK_STREAM:TCP连接
 

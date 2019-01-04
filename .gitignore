@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+#folders
+/client/include/gtest/
+/server/include/gtest/

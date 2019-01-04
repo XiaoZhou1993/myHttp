@@ -4,6 +4,7 @@
 //#include <cygwin/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include "../include/myHttpLog.h"
 
 void errorInfo(const char* errorCauseString);
 
