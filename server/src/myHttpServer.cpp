@@ -7,14 +7,7 @@
 #include <pthread.h>
 #include <cstring>
 #include "../include/myHttpLog.h"
-
-typedef unsigned char   	WORD;
-typedef unsigned short  	WORD16;
-typedef unsigned int    	WORD32;
-typedef unsigned long long	WORD64;
-
-int initMyHttpSocket(WORD16* port);
-void errorInfo(const char* errorCauseString);
+#include "../src/myHttpServer.h"
 
 int main()	
 {
