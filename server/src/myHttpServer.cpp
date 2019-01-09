@@ -6,8 +6,11 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <cstring>
-#include "../include/myHttpLog.h"
-#include "../src/myHttpServer.h"
+#include "server/include/myHttpLog.h"
+#include "server/include/myHttpAssert.h"
+#include "server/src/myHttpServer.h"
+
+void* acceptRequest(void* arg);
 
 int main()	
 {
@@ -20,9 +23,7 @@ int main()
 	struct sockaddr_in clientAddr;
 	WORD32 clientAddrLength = sizeof(clientAddr);
 
-	const int maxBufNum = 4096;
-	char buff[maxBufNum];
-	//pthread_t newthread;
+	pthread_t newthread;
 
 	myHttpServerSocket = initMyHttpSocket(&port);
 	HTTP_LOG_INFO("http running on port : %d", port);
@@ -34,13 +35,10 @@ int main()
 		if(-1 == myHttpClientSocket)
 			errorInfo("accept socket error!");
 
-		int byteNums = read(myHttpClientSocket, buff, maxBufNum);
-		if(byteNums != 0)
-			HTTP_LOG_INFO("get information: %s", buff);
+		if(pthread_create(&newthread, NULL, acceptRequest, (void *)(&myHttpClientSocket))!= 0)
+			errorInfo("create pthread failed!");
 
-		close(myHttpClientSocket);
-		//if(pthread_create(&newthread, NULL, acceptRequest,myHttpClientSocket) != 0)
-			//errorInfo("create pthread failed!");
+		pthread_join(newthread, NULL);
 	}
 
 	close(myHttpServerSocket);
@@ -48,19 +46,21 @@ int main()
 	return 0;
 }
 
-void acceptRequest(int client)
+void* acceptRequest(void* arg)
 {
-	char buf[1024];
-	int numChars;
-	char method[255];
-	char url[255];
-	char path[512];
-	WORD32 i,j;
-
-	//struct stat st;
-
 	HTTP_LOG_INFO("Excute accept request!");
 
+	ASSERT_VAILD_POINTER_NONE_RET(arg);
+
+	int *client = (int *)arg;
+	const int maxBufNum = 4096;
+	char buff[maxBufNum];
+
+	int byteNums = read(*client, buff, maxBufNum);
+	if(byteNums != 0)
+		HTTP_LOG_INFO("get information: %s", buff);
+
+	close(*client);
 }
 
 int initMyHttpSocket(WORD16* port)
