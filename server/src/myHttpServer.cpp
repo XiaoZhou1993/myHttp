@@ -29,18 +29,19 @@ int main()
 	myHttpServerSocket = initMyHttpSocket(&port);
 	HTTP_LOG_INFO("http running on port : %d", port);
 
-	// while(1)
-	// {
-	// 	myHttpClientSocket = accept(myHttpServerSocket, (struct sockaddr *)&clientAddr, &clientAddrLength);
+	while(1)
+	{
+		myHttpClientSocket = accept(myHttpServerSocket, (struct sockaddr *)&clientAddr, &clientAddrLength);
 
-	// 	if(-1 == myHttpClientSocket)
-	// 		errorInfo("accept socket error!");
+		if(-1 == myHttpClientSocket)
+			errorInfo("accept socket error!");
 
-	// 	if(pthread_create(&newthread, NULL, acceptRequest, (void *)(&myHttpClientSocket))!= 0)
-	// 		errorInfo("create pthread failed!");
+		if(pthread_create(&newthread, NULL, acceptRequest, (void *)(&myHttpClientSocket))!= 0)
+			errorInfo("create pthread failed!");
 
-	// 	pthread_join(newthread, NULL);
-	// }
+		pthread_join(newthread, NULL);
+		HTTP_LOG_INFO("The newthread is finished!");
+	}
 
 	close(myHttpServerSocket);
 
@@ -58,10 +59,11 @@ void* acceptRequest(void* arg)
 	char buff[maxBufNum];
 
 	int byteNums = read(*client, buff, maxBufNum);
+	HTTP_LOG_INFO("received bytes : %d", byteNums);
 	if(byteNums != 0)
 		HTTP_LOG_INFO("get information: %s", buff);
 
-	close(*client);
+	//close(*client);
 }
 
 int initMyHttpSocket(WORD16* port)

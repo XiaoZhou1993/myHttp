@@ -1,10 +1,9 @@
 #include <sys/socket.h>
 #include <iostream>
 #include <cstring>
-//#include <cygwin/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include "../include/myHttpLog.h"
+#include "client/include/myHttpLog.h"
 
 void errorInfo(const char* errorCauseString);
 
@@ -29,9 +28,16 @@ int main()
         return 0;
     }
 
-    const int MAXBUF = 4096;
-    char buffer[MAXBUF] = "hello TCP";
-    int nbytes = write(clientSocket, buffer, 10);
+    std::string sendBuff;
+    HTTP_LOG_INFO("Please input string : ");
+    while(getline(std::cin, sendBuff))
+    {
+        HTTP_LOG_INFO("input string : %s", sendBuff.c_str());
+        int nbytes = write(clientSocket, sendBuff.c_str(), sendBuff.length());
+        HTTP_LOG_INFO("sent bytes : %d", nbytes);
+        sendBuff.clear();
+        HTTP_LOG_INFO("Please input string : ");
+    }
 
     close(clientSocket);
 }
