@@ -11,6 +11,7 @@
 #include "server/src/myHttpServer.h"
 
 void* acceptRequest(void* arg);
+void myHttpCreatePipe(void);
 
 int main()	
 {
@@ -28,18 +29,18 @@ int main()
 	myHttpServerSocket = initMyHttpSocket(&port);
 	HTTP_LOG_INFO("http running on port : %d", port);
 
-	while(1)
-	{
-		myHttpClientSocket = accept(myHttpServerSocket, (struct sockaddr *)&clientAddr, &clientAddrLength);
+	// while(1)
+	// {
+	// 	myHttpClientSocket = accept(myHttpServerSocket, (struct sockaddr *)&clientAddr, &clientAddrLength);
 
-		if(-1 == myHttpClientSocket)
-			errorInfo("accept socket error!");
+	// 	if(-1 == myHttpClientSocket)
+	// 		errorInfo("accept socket error!");
 
-		if(pthread_create(&newthread, NULL, acceptRequest, (void *)(&myHttpClientSocket))!= 0)
-			errorInfo("create pthread failed!");
+	// 	if(pthread_create(&newthread, NULL, acceptRequest, (void *)(&myHttpClientSocket))!= 0)
+	// 		errorInfo("create pthread failed!");
 
-		pthread_join(newthread, NULL);
-	}
+	// 	pthread_join(newthread, NULL);
+	// }
 
 	close(myHttpServerSocket);
 
@@ -86,6 +87,45 @@ int initMyHttpSocket(WORD16* port)
 		errorInfo("listen socket error!");
 
 	return http;
+}
+
+void myHttpCreatePipe(void)
+{
+	int pipeFd[2];
+	std::string sendBuff;
+	std::string recvBuff;
+	WORD32 bytesCount = 0;
+
+	if(0 == pipe(pipeFd))
+	{
+		pid_t fPid = fork();
+
+		if(fPid < 0)
+		{
+			errorInfo("Create chid process failed!");
+		}
+		else if(0 == fPid)
+		{
+			HTTP_LOG_INFO("This is Child Process! The PID is %d, PPID is %d", getpid(), getppid());
+			close(pipeFd[1]);
+			char tempRecvBuff[128] = {0};
+			bytesCount = read(pipeFd[0], tempRecvBuff, 128);
+			recvBuff = std::string(tempRecvBuff);
+			HTTP_LOG_INFO("This is Child Process! Received %d bytes, the string is %s", bytesCount, recvBuff.c_str());
+			sleep(10);
+			HTTP_LOG_INFO("Exit Child Process!");
+		}
+		else
+		{
+			HTTP_LOG_INFO("This is Parent Process! The PID is %d, CPID is %d", getpid(), fPid);
+			close(pipeFd[0]);
+			getline(std::cin, sendBuff);
+			bytesCount = write(pipeFd[1], sendBuff.c_str(), sendBuff.length());
+			HTTP_LOG_INFO("This is Parent Process! Sent %d bytes, the string is %s", bytesCount, sendBuff.c_str());
+			sleep(15);
+			HTTP_LOG_INFO("Exit Parent Process!");
+		}
+	}
 }
 
 void errorInfo(const char* errorCauseString)
