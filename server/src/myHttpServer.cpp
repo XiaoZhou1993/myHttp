@@ -29,22 +29,32 @@ int main()
 	myHttpServerSocket = initMyHttpSocket(&port);
 	HTTP_LOG_INFO("http running on port : %d", port);
 
-	while(1)
+	myHttpClientSocket = accept(myHttpServerSocket, (struct sockaddr *)&clientAddr, &clientAddrLength);
+	if(-1 == myHttpClientSocket)
+		errorInfo("accept socket error!");
+
+	HTTP_LOG_INFO("Start run the server? please input y/n !");
+	fflush(stdin);
+	char choiceInput = getchar();
+	HTTP_LOG_INFO("The input is %c !", choiceInput);
+	while('n' != choiceInput)
 	{
-		myHttpClientSocket = accept(myHttpServerSocket, (struct sockaddr *)&clientAddr, &clientAddrLength);
+		HTTP_LOG_INFO("Enter the infinite loop !");
 
-		if(-1 == myHttpClientSocket)
-			errorInfo("accept socket error!");
+		if(pthread_create(&newthread, NULL, acceptRequest, (void *)(&myHttpClientSocket)))
+			errorInfo("create thread failed!");
 
-		if(pthread_create(&newthread, NULL, acceptRequest, (void *)(&myHttpClientSocket))!= 0)
-			errorInfo("create pthread failed!");
+		if(pthread_join(newthread, NULL))
+			errorInfo("join thread failed!");
 
-		pthread_join(newthread, NULL);
-		HTTP_LOG_INFO("The newthread is finished!");
+		HTTP_LOG_INFO("Continute run the server? please input y/n !");
+		fflush(stdin);
+		choiceInput = getchar();
+		HTTP_LOG_INFO("The input is %c !", choiceInput);
 	}
 
 	close(myHttpServerSocket);
-
+	HTTP_LOG_INFO("Shutdown the server successful !");
 	return 0;
 }
 
@@ -63,7 +73,9 @@ void* acceptRequest(void* arg)
 	if(byteNums != 0)
 		HTTP_LOG_INFO("get information: %s", buff);
 
-	//close(*client);
+	memset(buff, 0, strlen(buff));
+
+	return NULL;
 }
 
 int initMyHttpSocket(WORD16* port)
