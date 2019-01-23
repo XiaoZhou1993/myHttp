@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -12,6 +13,8 @@
 
 void* acceptRequest(void* arg);
 void myHttpCreatePipe(void);
+bool judgeInputLegal(std::string tempChoice);
+bool inputServerChoice(void);
 
 int main()	
 {
@@ -33,11 +36,9 @@ int main()
 	if(-1 == myHttpClientSocket)
 		errorInfo("accept socket error!");
 
-	HTTP_LOG_INFO("Start run the server? please input y/n !");
-	fflush(stdin);
-	char choiceInput = getchar();
-	HTTP_LOG_INFO("The input is %c !", choiceInput);
-	while('n' != choiceInput)
+	bool strRet = inputServerChoice();
+	HTTP_LOG_INFO("strRet = %d", strRet);
+	while(!strRet)
 	{
 		HTTP_LOG_INFO("Enter the infinite loop !");
 
@@ -47,13 +48,12 @@ int main()
 		if(pthread_join(newthread, NULL))
 			errorInfo("join thread failed!");
 
-		HTTP_LOG_INFO("Continute run the server? please input y/n !");
-		fflush(stdin);
-		choiceInput = getchar();
-		HTTP_LOG_INFO("The input is %c !", choiceInput);
+		strRet = inputServerChoice();
 	}
 
-	close(myHttpServerSocket);
+	if(close(myHttpServerSocket))
+		errorInfo("Close the socket failed !");
+
 	HTTP_LOG_INFO("Shutdown the server successful !");
 	return 0;
 }
@@ -83,6 +83,7 @@ int initMyHttpSocket(WORD16* port)
 	HTTP_LOG_INFO("Start init my http socket server!");
 
 	struct sockaddr_in serverAddr;
+
 	int http = socket(AF_INET, SOCK_STREAM, 0);	//AF_INET:网络连接，ipv4    //SOCK_STREAM:TCP连接
 
 	if(-1 == http)
@@ -94,6 +95,11 @@ int initMyHttpSocket(WORD16* port)
 	serverAddr.sin_port = htons(*port);
 	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+	/*设置地址重复使用*/
+	int addrReuseOn = 1; //on为1表示开启
+	if(setsockopt(http , SOL_SOCKET, SO_REUSEADDR, &addrReuseOn, sizeof(addrReuseOn))<0)
+		errorInfo("setsockopt error");
+
 	if(bind(http, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
 		errorInfo("bind socket error!");
 
@@ -101,6 +107,46 @@ int initMyHttpSocket(WORD16* port)
 		errorInfo("listen socket error!");
 
 	return http;
+}
+
+bool inputServerChoice(void)
+{
+	using namespace std;
+
+	HTTP_LOG_INFO("Enter inputServerChoice !");
+	HTTP_LOG_INFO("Run the server? please input yes/no !");
+
+	WORD count = 10;
+
+	string choiceInput;
+	getline(cin, choiceInput);
+	HTTP_LOG_INFO("The input is %s !", choiceInput.c_str());
+
+	while(count)
+	{
+		if (judgeInputLegal(choiceInput))
+		{
+			break;
+		}
+		else
+		{
+			HTTP_LOG_INFO("Run the server? please input yes/no !");
+			choiceInput.clear();
+			getline(cin, choiceInput);
+		}
+
+		count--;
+	}
+
+	return strcmp(choiceInput.c_str(), "yes");
+}
+
+bool judgeInputLegal(std::string tempChoice)
+{
+	if(tempChoice == "yes" || tempChoice == "no")
+		return true;
+
+	return false;
 }
 
 void myHttpCreatePipe(void)

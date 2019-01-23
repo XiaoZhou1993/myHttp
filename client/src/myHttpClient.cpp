@@ -39,7 +39,11 @@ int main()
         HTTP_LOG_INFO("Please input string : ");
     }
 
-    close(clientSocket);
+    if(close(clientSocket))
+        errorInfo("Close the socket failed !");
+
+    HTTP_LOG_INFO("Shutdown the client successful !");
+    return 0;
 }
 
 void errorInfo(const char* errorCauseString)
