@@ -10,6 +10,7 @@
 #include "server/include/myHttpLog.h"
 #include "server/include/myHttpAssert.h"
 #include "server/src/myHttpServer.h"
+#include "server/src/myHttpMsg.h"
 
 void* acceptRequest(void* arg);
 void myHttpCreatePipe(void);
@@ -73,6 +74,18 @@ void* acceptRequest(void* arg)
 	if(byteNums != 0)
 		HTTP_LOG_INFO("get information: %s", buff);
 
+	myHttpMessage recvHttpMsg(buff);
+
+	if(recvHttpMsg.judgeHttpReqType("GET"))
+	{
+		std::string tempString = recvHttpMsg.getHttpMethod();
+		HTTP_LOG_INFO("The msg type is %s !", tempString.c_str());
+	}
+	else
+	{
+		HTTP_LOG_INFO("The msg type is not get !");
+	}
+
 	memset(buff, 0, strlen(buff));
 
 	return NULL;
@@ -97,7 +110,7 @@ int initMyHttpSocket(WORD16* port)
 
 	/*设置地址重复使用*/
 	int addrReuseOn = 1; //on为1表示开启
-	if(setsockopt(http , SOL_SOCKET, SO_REUSEADDR, &addrReuseOn, sizeof(addrReuseOn))<0)
+	if(setsockopt(http , SOL_SOCKET, SO_REUSEADDR, &addrReuseOn, sizeof(addrReuseOn)) < 0)
 		errorInfo("setsockopt error");
 
 	if(bind(http, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
@@ -116,7 +129,7 @@ bool inputServerChoice(void)
 	HTTP_LOG_INFO("Enter inputServerChoice !");
 	HTTP_LOG_INFO("Run the server? please input yes/no !");
 
-	WORD count = 10;
+	WORD8 count = 10;
 
 	string choiceInput;
 	getline(cin, choiceInput);
