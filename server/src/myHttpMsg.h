@@ -5,19 +5,19 @@
 
 class myHttpMessage
 {
-private:
-	std::string m_method;
-	std::string m_url;
-	std::string m_path;
+	private:
+		std::string m_method;
+		std::string m_url;
+		std::string m_path;
 
-public:
-	myHttpMessage();
-	myHttpMessage(char* httpMsg);
+	public:
+		myHttpMessage();
+		myHttpMessage(char* httpMsg);
 
-	~myHttpMessage();
+		~myHttpMessage();
 
-	std::string getHttpMethod();
-	bool judgeHttpReqType(const std::string &aimType);
+		std::string getHttpMethod();
+		bool judgeHttpReqType(const std::string &aimType);
 };
 
 #endif

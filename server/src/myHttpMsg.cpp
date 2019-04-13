@@ -57,6 +57,6 @@ std::string myHttpMessage::getHttpMethod()
 
 bool myHttpMessage::judgeHttpReqType(const std::string &aimType)
 {
-	HTTP_LOG_INFO("Enter the judgeHttpReqType !");
+	HTTP_LOG_INFO("Enter the judgeHttpReqType!");
 	return m_method == aimType;
 }

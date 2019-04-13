@@ -1,16 +1,4 @@
-#include <stdio.h>
-#include <iostream>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <cstring>
-#include "server/include/myHttpLog.h"
-#include "server/include/myHttpAssert.h"
 #include "server/src/myHttpServer.h"
-#include "server/src/myHttpMsg.h"
 
 void* acceptRequest(void* arg);
 void myHttpCreatePipe(void);
@@ -19,7 +7,6 @@ bool inputServerChoice(void);
 
 int main()	
 {
-	using namespace std;
 	HTTP_LOG_INFO("Running my Http server!");
 
 	WORD16 port = 80;
@@ -31,37 +18,37 @@ int main()
 	pthread_t newthread;
 
 	myHttpServerSocket = initMyHttpSocket(&port);
-	HTTP_LOG_INFO("http running on port : %d", port);
+	HTTP_LOG_INFO("Http running on port : %d", port);
 
 	myHttpClientSocket = accept(myHttpServerSocket, (struct sockaddr *)&clientAddr, &clientAddrLength);
 	if(-1 == myHttpClientSocket)
-		errorInfo("accept socket error!");
+		errorInfo("Accept socket error!");
 
 	bool strRet = inputServerChoice();
 	HTTP_LOG_INFO("strRet = %d", strRet);
 	while(!strRet)
 	{
-		HTTP_LOG_INFO("Enter the infinite loop !");
+		HTTP_LOG_INFO("Enter the infinite loop!");
 
 		if(pthread_create(&newthread, NULL, acceptRequest, (void *)(&myHttpClientSocket)))
-			errorInfo("create thread failed!");
+			errorInfo("Create thread failed!");
 
 		if(pthread_join(newthread, NULL))
-			errorInfo("join thread failed!");
+			errorInfo("Join thread failed!");
 
 		strRet = inputServerChoice();
 	}
 
 	if(close(myHttpServerSocket))
-		errorInfo("Close the socket failed !");
+		errorInfo("Close the socket failed!");
 
-	HTTP_LOG_INFO("Shutdown the server successful !");
+	HTTP_LOG_INFO("Shutdown the server successful!");
 	return 0;
 }
 
 void* acceptRequest(void* arg)
 {
-	HTTP_LOG_INFO("Excute accept request!");
+	HTTP_LOG_INFO("Execute accept request!");
 
 	ASSERT_VAILD_POINTER_NONE_RET(arg);
 
@@ -70,20 +57,20 @@ void* acceptRequest(void* arg)
 	char buff[maxBufNum];
 
 	int byteNums = read(*client, buff, maxBufNum);
-	HTTP_LOG_INFO("received bytes : %d", byteNums);
+	HTTP_LOG_INFO("Received bytes : %d", byteNums);
 	if(byteNums != 0)
-		HTTP_LOG_INFO("get information: %s", buff);
+		HTTP_LOG_INFO("Get information: %s", buff);
 
 	myHttpMessage recvHttpMsg(buff);
 
 	if(recvHttpMsg.judgeHttpReqType("GET"))
 	{
 		std::string tempString = recvHttpMsg.getHttpMethod();
-		HTTP_LOG_INFO("The msg type is %s !", tempString.c_str());
+		HTTP_LOG_INFO("The message type is %s!", tempString.c_str());
 	}
 	else
 	{
-		HTTP_LOG_INFO("The msg type is not get !");
+		HTTP_LOG_INFO("The message type is not get!");
 	}
 
 	memset(buff, 0, strlen(buff));
@@ -93,14 +80,14 @@ void* acceptRequest(void* arg)
 
 int initMyHttpSocket(WORD16* port)
 {
-	HTTP_LOG_INFO("Start init my http socket server!");
+	HTTP_LOG_INFO("Start initial my http socket server!");
 
 	struct sockaddr_in serverAddr;
 
-	int http = socket(AF_INET, SOCK_STREAM, 0);	//AF_INET:网络连接，ipv4    //SOCK_STREAM:TCP连接
+	int http = socket(AF_INET, SOCK_STREAM, 0);	//AF_INET:ipV4  //SOCK_STREAM:TCP连接
 
 	if(-1 == http)
-		errorInfo("create socket error!");
+		errorInfo("Create socket error!");
 
 	memset(&serverAddr, 0, sizeof(serverAddr));
 
@@ -108,32 +95,30 @@ int initMyHttpSocket(WORD16* port)
 	serverAddr.sin_port = htons(*port);
 	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	/*设置地址重复使用*/
-	int addrReuseOn = 1; //on为1表示开启
+	/*set the address reuse*/
+	int addrReuseOn = 1;
 	if(setsockopt(http , SOL_SOCKET, SO_REUSEADDR, &addrReuseOn, sizeof(addrReuseOn)) < 0)
-		errorInfo("setsockopt error");
+		errorInfo("Set socket error!");
 
 	if(bind(http, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
-		errorInfo("bind socket error!");
+		errorInfo("Bind socket error!");
 
 	if(listen(http, 5) < 0)
-		errorInfo("listen socket error!");
+		errorInfo("Listen socket error!");
 
 	return http;
 }
 
 bool inputServerChoice(void)
 {
-	using namespace std;
-
-	HTTP_LOG_INFO("Enter inputServerChoice !");
-	HTTP_LOG_INFO("Run the server? please input yes/no !");
+	HTTP_LOG_INFO("Enter inputServerChoice!");
+	HTTP_LOG_INFO("Run the server? please input yes/no!");
 
 	WORD8 count = 10;
 
-	string choiceInput;
-	getline(cin, choiceInput);
-	HTTP_LOG_INFO("The input is %s !", choiceInput.c_str());
+	std::string choiceInput;
+	getline(std::cin, choiceInput);
+	HTTP_LOG_INFO("The input is %s!", choiceInput.c_str());
 
 	while(count)
 	{
@@ -143,15 +128,15 @@ bool inputServerChoice(void)
 		}
 		else
 		{
-			HTTP_LOG_INFO("Run the server? please input yes/no !");
+			HTTP_LOG_INFO("Run the server? please input yes/no!");
 			choiceInput.clear();
-			getline(cin, choiceInput);
+			getline(std::cin, choiceInput);
 		}
 
 		count--;
 	}
 
-	return strcmp(choiceInput.c_str(), "yes");
+	return choiceInput == "yes";
 }
 
 bool judgeInputLegal(std::string tempChoice)
@@ -175,7 +160,7 @@ void myHttpCreatePipe(void)
 
 		if(fPid < 0)
 		{
-			errorInfo("Create chid process failed!");
+			errorInfo("Create child process failed!");
 		}
 		else if(0 == fPid)
 		{
@@ -204,5 +189,5 @@ void myHttpCreatePipe(void)
 void errorInfo(const char* errorCauseString)
 {
 	perror(errorCauseString);
-	exit(1);	
+	exit(1);
 }
