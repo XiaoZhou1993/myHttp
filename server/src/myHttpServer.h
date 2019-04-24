@@ -23,4 +23,9 @@ typedef unsigned long long	WORD64;
 int initMyHttpSocket(WORD16* port);
 void errorInfo(const char* errorCauseString);
 
+void* acceptRequest(void* arg);
+void myHttpCreatePipe(void);
+bool judgeInputLegal(std::string tempChoice);
+bool inputServerChoice(void);
+
 #endif
