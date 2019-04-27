@@ -17,27 +17,40 @@ myHttpMessage::myHttpMessage(char* httpMsg)
 {
 	HTTP_LOG_INFO("Enter myHttpMessage constructor!");
 
-	char *tempString;
+	const char delimPara1 = ' ';
+	const char delimPara2 = '?';
 
-	const char* delimPara1 = " ";
-	const char* delimPara2 = "?";
+	std::string tempSourceString(httpMsg);
+	std::string tempString;
+	std::string::size_type startPos,endPos;
 
-	tempString = strtok(httpMsg, delimPara1);
+	startPos = 0;
+	endPos = tempSourceString.find(delimPara1);
+	if(std::string::npos == endPos)
+		exit(0);
+
+	tempString = tempSourceString.substr(startPos, (endPos-startPos));
 	m_method = tempString;
-	if(true == m_method.empty())
-		exit(0);
 	HTTP_LOG_INFO("m_method = %s", m_method.c_str());
+	tempString.clear();
 
-	tempString = strtok(NULL, delimPara2);
+	startPos = endPos + 1;
+	endPos = tempSourceString.find(delimPara2);
+	if(std::string::npos == endPos)
+		exit(0);
+
+	tempString = tempSourceString.substr(startPos, (endPos-startPos));
 	m_url = tempString;
- 	if(true == m_url.empty())
-		exit(0);
 	HTTP_LOG_INFO("m_url = %s", m_url.c_str());
+	tempString.clear();
 
-	tempString = strtok(NULL, delimPara1);
-	m_path = tempString;
-	if(true == m_path.empty())
+	startPos = endPos + 1;
+	endPos = tempSourceString.find(delimPara1);
+	if(std::string::npos == endPos)
 		exit(0);
+
+	tempString = tempSourceString.substr(startPos, (endPos-startPos));
+	m_path = tempString;
 	HTTP_LOG_INFO("m_path = %s", m_path.c_str());
 }
 
